@@ -53,7 +53,7 @@ export default defineConfig(async () => {
         : {}),
     },
     plugins: [...enterProdPlugin(), ...enterDevPlugin(), 
-      vinext(),
+      vinext({ react: false }),
       sites(),
       cloudflare({
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
