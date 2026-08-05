@@ -25,14 +25,14 @@
 
 ## Implementation checklist
 
-- [ ] 创建 `index.html`、`src/main.tsx` 和 `src/App.tsx`，使 React 首页能从 `#root` 独立挂载。
-- [ ] 将 `app/page.tsx` 的首页状态、键盘事件、动画与图片资源路径完整迁移到 `src/App.tsx`。
-- [ ] 将 `app/globals.css` 迁移到 `src/index.css`，并由 `src/main.tsx` 导入。
-- [ ] 将 `vite.config.ts` 改为只使用 React 与 Enter 预览插件，监听 `0.0.0.0`。
-- [ ] 将 `package.json` 脚本和依赖收敛为 React + Vite + ESLint 所需集合，并更新锁文件。
-- [ ] 将 `tsconfig.json` 移除 Next.js 特有配置，保留 Vite + React TypeScript 配置。
-- [ ] 删除未使用的 Next.js、vinext、Workers、Drizzle 与 Sites 运行文件；保留 `public/assets` 和 favicon。
-- [ ] 取消追踪 `.vinext/` 遗留生成文件，并保留其忽略规则。
+- [x] 创建 `index.html`、`src/bootstrap.tsx` 和 `src/App.tsx`，使 React 首页能从 `#root` 独立挂载。
+- [x] 将 `app/page.tsx` 的首页状态、键盘事件、动画与图片资源路径完整迁移到 `src/App.tsx`。
+- [x] 将 `app/globals.css` 迁移到 `src/index.css`，并由 `src/bootstrap.tsx` 导入。
+- [x] 将 `vite.config.ts` 改为只使用 Enter 预览插件内置的 React 插件，监听 `0.0.0.0`。
+- [x] 将 `package.json` 脚本和依赖收敛为 React + Vite + ESLint 所需集合，并更新锁文件。
+- [x] 将 `tsconfig.json` 移除 Next.js 特有配置，保留 Vite + React TypeScript 配置。
+- [x] 删除未使用的 Next.js、vinext、Workers、Drizzle 与 Sites 运行文件；保留 `public/assets` 和 favicon。
+- [x] 取消追踪 `.vinext/` 遗留生成文件，并保留其忽略规则。
 
 ## Verification checklist
 
