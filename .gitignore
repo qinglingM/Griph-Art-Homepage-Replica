@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# vinext generated cache (contains machine-specific absolute paths)
+/.vinext/
+
 # misc
 .DS_Store
 *.pem
