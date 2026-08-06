@@ -99,8 +99,8 @@ export default function Home() {
           <IntroPosterStack second />
         </div>
       )}
-      <div className={`tigerCursor ${cursor.visible ? "visible" : ""}`} style={{ transform: `translate3d(${cursor.x - 15}px,${cursor.y - 14}px,0)` }}>
-        <img src="/assets/tiger.png" alt="" />
+      <div className={`mascotCursor ${cursor.visible ? "visible" : ""}`} style={{ transform: `translate3d(${cursor.x - 15}px,${cursor.y - 14}px,0)` }}>
+        <img src="/assets/raccoon.png" alt="" />
       </div>
 
       <header className="siteHeader">
@@ -123,7 +123,7 @@ export default function Home() {
 
       <aside className={`menuPanel ${menu ? "open" : ""}`} aria-hidden={!menu}>
         <div className="menuWords"><a href="#selection">DECKS</a><a href="#footer">ARTISTS</a></div>
-        <img src="/assets/tiger.png" alt="" />
+        <img src="/assets/raccoon.png" alt="" />
         <div className="socialMenu"><a href="#">◎ Instagram</a><a href="#">♪ Tiktok</a><a href="#">ⓟ Pinterest</a></div>
       </aside>
 
@@ -140,7 +140,7 @@ export default function Home() {
       </section>
 
       <section className="selection" id="selection">
-        <div className="sectionTitle"><h2>The tiger&apos;s latest drop</h2><a href="#selection">View all decks</a></div>
+        <div className="sectionTitle"><h2>The raccoon&apos;s latest drop</h2><a href="#selection">View all decks</a></div>
         <div className="posterRail" onMouseLeave={() => setActive(11)}>
           {products.map(([name, slug, artist], index) => (
             <a key={slug} href={`#${slug}`} className={`posterItem ${active === index ? "active" : ""}`} onMouseEnter={() => setActive(index)} onFocus={() => setActive(index)}>
@@ -155,7 +155,7 @@ export default function Home() {
         <a className="featureCard aboutCard" href="#footer">
           <strong>THE ARTISTS</strong>
           <div className="burst b1">✦</div><div className="burst b2">✦</div>
-          <img src="/assets/tiger.png" alt="" />
+          <img src="/assets/raccoon.png" alt="" />
         </a>
         <a className="featureCard catalogueCard" href="#selection"><div className="featuredDeck"><img src="/assets/poster-5.png" alt="After School limited skateboard deck" /></div><div className="dropCopy"><small>DROP 04 / 100 MADE</small><strong>AFTER SCHOOL</strong><span>BY NINA VALE →</span></div></a>
       </section>
@@ -164,7 +164,7 @@ export default function Home() {
         <div className="footerBrand"><div className="footerWordmark">PLY/FORM</div><h2>Artist-made skateboard decks</h2>
           <p>7-ply Canadian maple<br />Numbered artist editions<br />Pressed and printed in Europe<br />Deck only — 8.25&quot; standard width<br />Secure worldwide shipping</p>
         </div>
-        <img className="footerTiger" src="/assets/tiger.png" alt="" />
+        <img className="footerMascot" src="/assets/raccoon.png" alt="" />
         <div className="footerLinks"><p><b>Studio</b><br />studio@plyform.co</p><div><a href="#">Instagram</a><a href="#">Tiktok</a><a href="#">Pinterest</a><a href="#">Shipping</a><a href="#">Returns</a><a href="#">Terms</a></div><a href="#">2026 PLY/FORM — RIDE THE ART</a></div>
       </footer>
 
