@@ -1,17 +1,15 @@
-# GRIPH Art Homepage Replica
+# PLY/FORM — Artist-Made Skateboard Decks
 
-Desktop-focused recreation of the motion language and homepage structure of `griph-art.com`.
+A desktop-first interactive storefront for **PLY/FORM**, an artist-collaboration skateboard deck label.
 
-## Included
+## Highlights
 
-- Three-stage full-screen entry transition
-- Announcement ticker
-- Hero image reveal and split typography
-- Animated poster selection grid
-- Horizontal looping gallery
-- Scroll-triggered reveal effects
-- Custom cursor and interactive hover states
-- Large editorial footer
+- Three-stage full-screen opening animation
+- Artist-made skateboard deck product collection
+- Full-width 16-deck accordion rail with hover expansion
+- Dopamine color system across navigation, cards, overlays, cart, and footer
+- Full-screen menu, search overlay, cart drawer, custom cursor, and scroll reveals
+- Responsive desktop and mobile layouts
 
 ## Run locally
 
@@ -20,8 +18,8 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open the local URL printed by the development server.
 
-## Notes
+## Production
 
-This repository is a study/recreation project. The page references publicly hosted image assets from the original website for visual fidelity. All trademarks and artwork belong to their respective owners.
+https://griph-art-replica.beril1123.chatgpt.site

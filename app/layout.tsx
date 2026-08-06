@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GRIPH | Official Poster Store",
-  description: "Affiches d'art contemporain vibrantes et abordables par GRIPH.",
+  title: "PLY/FORM | Artist-Made Skateboard Decks",
+  description: "Limited skateboard decks created with independent artists. Built to be ridden or collected.",
   other: {
     "codex-preview": "development",
   },
@@ -30,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr">
+    <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
