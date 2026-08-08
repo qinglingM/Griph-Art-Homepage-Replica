@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PRODUCTS, formatPrice, type Product } from "./products";
 import { useCart } from "./useCart";
 
@@ -33,9 +33,9 @@ export default function Home() {
   const [toast, setToast] = useState("");
   const [ordered, setOrdered] = useState(false);
   const [cursor, setCursor] = useState({ x: -80, y: -80, visible: false });
-  const revealRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const railRef = useRef<HTMLDivElement>(null);
+  const revealRef = useRef<HTMLDivElement>(null);
   const toastTimer = useRef(0);
 
   const bag = useCart();
@@ -84,12 +84,9 @@ export default function Home() {
     return () => document.body.classList.remove("overlayLocked");
   }, [menu, search, cart]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const target = revealRef.current;
     if (!target) return;
-    // Content is visible by default (SSR / no-JS safe). Only opt into the
-    // scroll-in animation once we know JS runs and can reveal it again.
-    target.classList.add("preReveal");
     let revealed = false;
     let poll = 0;
     const reveal = () => {
@@ -101,21 +98,26 @@ export default function Home() {
     const checkVisible = () => {
       const rect = target.getBoundingClientRect();
       const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-      if (rect.top < viewportHeight * 0.85 && rect.bottom > 0) reveal();
+      if (rect.top < viewportHeight * 0.9 && rect.bottom > 0) reveal();
     };
+    // Hide only now that the reveal machinery is guaranteed to be installed.
+    target.classList.add("preReveal");
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) reveal();
-    }, { threshold: 0.24 });
+    }, { threshold: 0.2 });
     observer.observe(target);
     window.addEventListener("scroll", checkVisible, { passive: true });
     window.addEventListener("resize", checkVisible);
-    poll = window.setInterval(checkVisible, 400);
+    poll = window.setInterval(checkVisible, 300);
     checkVisible();
+    // Hard stop: the content is never allowed to stay hidden.
+    const failsafe = window.setTimeout(reveal, 6000);
     return () => {
       observer.disconnect();
       window.removeEventListener("scroll", checkVisible);
       window.removeEventListener("resize", checkVisible);
-      if (poll) window.clearInterval(poll);
+      window.clearInterval(poll);
+      window.clearTimeout(failsafe);
     };
   }, []);
 

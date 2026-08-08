@@ -76,9 +76,9 @@ body.introLocked { overflow:hidden!important; }
 .selection { padding:77px 10px 0; min-height:840px; }
 .sectionTitle { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:36px; }
 .sectionTitle h2 { margin:0; font-size:31px; letter-spacing:-1px; font-weight:700; }.sectionTitle a { font-size:24px; font-weight:700; text-decoration:underline; }
-.posterRail { height:680px; display:flex; align-items:flex-start; width:100%; filter:drop-shadow(0 8px 9px rgba(25,17,47,.2)); overflow:hidden; }
+.posterRail { height:740px; display:flex; align-items:flex-start; width:100%; filter:drop-shadow(0 8px 9px rgba(25,17,47,.2)); overflow:hidden; }
 .posterItem { position:relative; flex:1 1 64px; min-width:46px; height:590px; padding-top:15px; background:#d9ccff; overflow:hidden; transition:flex-basis .6s cubic-bezier(.76,0,.24,1),height .5s,transform .4s; border:0; }
-.posterItem.active { flex-basis:300px; height:680px; z-index:2; background:#b8f4e6; }
+.posterItem.active { flex-basis:300px; height:740px; z-index:2; background:#b8f4e6; }
 .deckShape { position:relative; width:152px; height:572px; margin:0 auto; overflow:hidden; border-radius:78px; background:var(--green); border:6px solid var(--yellow); box-shadow:0 9px 18px rgba(25,17,47,.26); transition:width .6s cubic-bezier(.76,0,.24,1),transform .6s cubic-bezier(.2,.8,.2,1); }
 .posterItem.active .deckShape { width:188px; transform:rotate(-1.5deg); }
 .deckShape:before,.deckShape:after { content:""; position:absolute; z-index:3; left:50%; width:44px; height:12px; transform:translateX(-50%); background:radial-gradient(circle at 4px 6px,var(--ink) 0 2.8px,transparent 3.2px),radial-gradient(circle at 40px 6px,var(--ink) 0 2.8px,transparent 3.2px); }
@@ -86,14 +86,16 @@ body.introLocked { overflow:hidden!important; }
 .deckShape img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .6s cubic-bezier(.2,.8,.2,1),filter .4s; }
 .posterItem.active img { transform:scale(1.04); filter:saturate(1.08); }
 .posterMeta { height:90px; background:var(--paper); padding:17px 18px; display:flex; flex-direction:column; opacity:0; transform:translateY(-16px); transition:.35s .2s; }
-.posterItem:hover .posterMeta,.posterItem:focus-within .posterMeta { opacity:1; transform:none; }.posterMeta span { font-size:20px;font-weight:700; }.posterMeta small { margin-top:5px;font-size:14px; }
+.posterItem:hover .posterMeta,.posterItem:focus-within .posterMeta,.posterItem.active .posterMeta { opacity:1; transform:none; }.posterMeta span { font-size:20px;font-weight:700; }.posterMeta small { margin-top:5px;font-size:14px; }
 .addButton { margin-top:10px; align-self:flex-start; background:var(--blue); color:var(--yellow); font-size:13px; font-weight:800; letter-spacing:.06em; padding:9px 14px; white-space:nowrap; transition:background .25s,color .25s,transform .25s; }
 .addButton:hover { background:var(--pink); color:var(--ink); transform:translateY(-2px); }
-.posterItem.active .posterMeta { height:auto; min-height:132px; }
+.posterItem.active .posterMeta { height:auto; min-height:140px; }
 
 .featureCards { display:grid; grid-template-columns:1fr 1fr; gap:50px; padding:0 0 126px; }
-.featureCards.preReveal { opacity:0; transform:translateY(80px); transition:opacity .8s,transform .9s cubic-bezier(.2,.75,.25,1); }
-.featureCards.preReveal.isVisible { opacity:1; transform:none; }
+/* Scroll-in reveal. The hidden state is only applied by JS (.preReveal), so the
+   cards can never get stuck invisible if the animation never runs. */
+.featureCards.preReveal { opacity:0; transform:translateY(80px); }
+.featureCards.preReveal.isVisible { opacity:1; transform:none; transition:opacity .8s,transform .9s cubic-bezier(.2,.75,.25,1); }
 .featureCard { height:388px; overflow:hidden; position:relative; transition:transform .55s cubic-bezier(.2,.8,.2,1),filter .4s; }
 .featureCard:hover { transform:scale(.98) rotate(-1deg); filter:saturate(1.2); }
 .aboutCard { background:var(--blue); color:var(--pink); }
