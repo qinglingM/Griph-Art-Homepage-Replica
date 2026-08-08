@@ -47,13 +47,14 @@ export default defineConfig(async () => {
   return {
     server: {
       host: "0.0.0.0",
+      port: 3000,
       allowedHosts: ["terminal.local"],
       ...(isCodexSeatbeltSandbox
         ? { watch: { useFsEvents: false, usePolling: true } }
         : {}),
     },
     plugins: [...enterProdPlugin(), ...enterDevPlugin(), 
-      vinext(),
+      vinext({ react: false }),
       sites(),
       cloudflare({
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
