@@ -64,10 +64,17 @@ export default function Home() {
     const escape = (event: KeyboardEvent) => {
       if (event.key === "Escape") { setMenu(false); setSearch(false); setCart(false); }
     };
-    const move = (event: MouseEvent) => setCursor({ x: event.clientX, y: event.clientY, visible: true });
+    const move = (event: MouseEvent) => {
+      setCursor({ x: event.clientX, y: event.clientY, visible: true });
+      document.body.classList.add("customCursorActive");
+    };
     window.addEventListener("keydown", escape);
     window.addEventListener("mousemove", move);
-    return () => { window.removeEventListener("keydown", escape); window.removeEventListener("mousemove", move); };
+    return () => {
+      window.removeEventListener("keydown", escape);
+      window.removeEventListener("mousemove", move);
+      document.body.classList.remove("customCursorActive");
+    };
   }, []);
 
   useEffect(() => {
@@ -75,11 +82,27 @@ export default function Home() {
   }, [search]);
 
   useEffect(() => {
+    const target = revealRef.current;
+    if (!target) return;
+    const reveal = () => target.classList.add("isVisible");
+    const checkVisible = () => {
+      const rect = target.getBoundingClientRect();
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+      if (rect.top < viewportHeight * 0.85 && rect.bottom > 0) reveal();
+    };
     const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) entry.target.classList.add("isVisible");
+      if (entry.isIntersecting) reveal();
     }, { threshold: 0.24 });
-    if (revealRef.current) observer.observe(revealRef.current);
-    return () => observer.disconnect();
+    observer.observe(target);
+    // Fallback in case IntersectionObserver doesn't fire in this environment.
+    window.addEventListener("scroll", checkVisible, { passive: true });
+    window.addEventListener("resize", checkVisible);
+    checkVisible();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", checkVisible);
+      window.removeEventListener("resize", checkVisible);
+    };
   }, []);
 
   const heroFlash = () => {
