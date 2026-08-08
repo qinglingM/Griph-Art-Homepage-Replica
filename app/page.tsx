@@ -1,22 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-
-const products = [
-  ["Night Swim", "night-swim", "Maya Kline"], ["Back Alley", "back-alley", "Noah Park"],
-  ["Lucky Sardine", "lucky-sardine", "Studio Pêche"], ["Redline", "redline", "Lucas Ferri"],
-  ["After School", "after-school", "Nina Vale"], ["Sun Ritual", "sun-ritual", "Ari Bloom"],
-  ["Blue Lobster", "blue-lobster", "Maison Crabe"], ["Jelly Drift", "jelly-drift", "Yoko Mori"],
-  ["Long Dog", "long-dog", "Camille Rose"], ["Tomato Club", "tomato-club", "Bodega Lab"],
-  ["Midnight Run", "midnight-run", "Kaito Ishii"], ["Koi Study 02", "koi-study-02", "Hana Sato"],
-  ["Soft Static", "soft-static", "Milo Arden"], ["Acid Bloom", "acid-bloom", "Lena Sanz"],
-  ["Poolside Ghost", "poolside-ghost", "Theo Sun"], ["Signal Fire", "signal-fire", "Rae Ito"],
-] as const;
-
-const deckAssets = [
-  ...Array.from({ length: 12 }, (_, index) => `/assets/poster-${index + 1}.png`),
-  "/assets/intro-12.png", "/assets/intro-13.png", "/assets/intro-14.png", "/assets/intro-15.png",
-];
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { PRODUCTS, formatPrice, type Product } from "./products";
+import { useCart } from "./useCart";
 
 function SearchIcon() {
   return <span className="searchIcon" aria-hidden="true" />;
@@ -40,12 +26,20 @@ export default function Home() {
   const [intro, setIntro] = useState(true);
   const [menu, setMenu] = useState(false);
   const [search, setSearch] = useState(false);
+  const [query, setQuery] = useState("");
   const [cart, setCart] = useState(false);
   const [flash, setFlash] = useState(false);
   const [active, setActive] = useState(11);
+  const [toast, setToast] = useState("");
+  const [ordered, setOrdered] = useState(false);
   const [cursor, setCursor] = useState({ x: -80, y: -80, visible: false });
   const revealRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const railRef = useRef<HTMLDivElement>(null);
+  const toastTimer = useRef(0);
+
+  const bag = useCart();
+  const { add: addToCart } = bag;
 
   useEffect(() => {
     document.body.classList.add("introLocked");
@@ -60,9 +54,11 @@ export default function Home() {
     };
   }, []);
 
+  const closeSearch = useCallback(() => { setSearch(false); setQuery(""); }, []);
+
   useEffect(() => {
     const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { setMenu(false); setSearch(false); setCart(false); }
+      if (event.key === "Escape") { setMenu(false); setSearch(false); setQuery(""); setCart(false); }
     };
     const move = (event: MouseEvent) => {
       setCursor({ x: event.clientX, y: event.clientY, visible: true });
@@ -81,10 +77,27 @@ export default function Home() {
     if (search) window.setTimeout(() => searchInputRef.current?.focus(), 350);
   }, [search]);
 
+  // Any open overlay locks background scrolling.
   useEffect(() => {
+    const locked = menu || search || cart;
+    document.body.classList.toggle("overlayLocked", locked);
+    return () => document.body.classList.remove("overlayLocked");
+  }, [menu, search, cart]);
+
+  useLayoutEffect(() => {
     const target = revealRef.current;
     if (!target) return;
-    const reveal = () => target.classList.add("isVisible");
+    // Content is visible by default (SSR / no-JS safe). Only opt into the
+    // scroll-in animation once we know JS runs and can reveal it again.
+    target.classList.add("preReveal");
+    let revealed = false;
+    let poll = 0;
+    const reveal = () => {
+      if (revealed) return;
+      revealed = true;
+      target.classList.add("isVisible");
+      if (poll) window.clearInterval(poll);
+    };
     const checkVisible = () => {
       const rect = target.getBoundingClientRect();
       const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
@@ -94,20 +107,62 @@ export default function Home() {
       if (entry.isIntersecting) reveal();
     }, { threshold: 0.24 });
     observer.observe(target);
-    // Fallback in case IntersectionObserver doesn't fire in this environment.
     window.addEventListener("scroll", checkVisible, { passive: true });
     window.addEventListener("resize", checkVisible);
+    poll = window.setInterval(checkVisible, 400);
     checkVisible();
     return () => {
       observer.disconnect();
       window.removeEventListener("scroll", checkVisible);
       window.removeEventListener("resize", checkVisible);
+      if (poll) window.clearInterval(poll);
     };
   }, []);
 
-  const heroFlash = () => {
+  useEffect(() => () => window.clearTimeout(toastTimer.current), []);
+
+  const notify = useCallback((message: string) => {
+    setToast(message);
+    window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(""), 2200);
+  }, []);
+
+  const addProduct = useCallback((product: Product) => {
+    addToCart(product);
+    setOrdered(false);
+    notify(`${product.name} added to your bag`);
+  }, [addToCart, notify]);
+
+  const focusDeck = useCallback((index: number) => {
+    setActive(index);
+    const rail = railRef.current;
+    const item = rail?.children[index] as HTMLElement | undefined;
+    item?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, []);
+
+  const step = useCallback((direction: number) => {
     setFlash(true);
     window.setTimeout(() => setFlash(false), 650);
+    const next = (active + direction + PRODUCTS.length) % PRODUCTS.length;
+    focusDeck(next);
+  }, [active, focusDeck]);
+
+  const results = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    if (!term) return [];
+    return PRODUCTS.filter(
+      (product) =>
+        product.name.toLowerCase().includes(term) || product.artist.toLowerCase().includes(term),
+    );
+  }, [query]);
+
+  const featured = PRODUCTS[4];
+
+  const checkout = () => {
+    if (!bag.count) return;
+    bag.clear();
+    setOrdered(true);
+    notify("Order placed — thanks for riding the art");
   };
 
   return (
@@ -128,13 +183,13 @@ export default function Home() {
 
       <header className="siteHeader">
         <div className="navBar">
-          <button className={`menuButton ${menu ? "open" : ""}`} onClick={() => { setMenu(!menu); setSearch(false); setCart(false); }} aria-label="Menu">
+          <button className={`menuButton ${menu ? "open" : ""}`} onClick={() => { setMenu(!menu); closeSearch(); setCart(false); }} aria-label="Menu" aria-expanded={menu}>
             <span /><span /><span />
           </button>
           <a className="logoLink" href="#top" aria-label="PLY/FORM home"><span className="navWordmark">PLY/FORM</span></a>
           <div className="navActions">
-            <button onClick={() => { setSearch(true); setMenu(false); setCart(false); }} aria-label="Rechercher"><SearchIcon /></button>
-            <button onClick={() => { setCart(true); setMenu(false); setSearch(false); }} aria-label="Panier"><BagIcon /><b>0</b></button>
+            <button onClick={() => { setSearch(true); setMenu(false); setCart(false); }} aria-label="Search"><SearchIcon /></button>
+            <button onClick={() => { setCart(true); setMenu(false); closeSearch(); }} aria-label={`Bag, ${bag.count} items`}><BagIcon /><b>{bag.count}</b></button>
           </div>
         </div>
         <div className="promoStrip">
@@ -145,9 +200,16 @@ export default function Home() {
       </header>
 
       <aside className={`menuPanel ${menu ? "open" : ""}`} aria-hidden={!menu}>
-        <div className="menuWords"><a href="#selection">DECKS</a><a href="#footer">ARTISTS</a></div>
+        <div className="menuWords">
+          <a href="#selection" onClick={() => setMenu(false)}>DECKS</a>
+          <a href="#footer" onClick={() => setMenu(false)}>ARTISTS</a>
+        </div>
         <img src="/assets/raccoon.png" alt="" />
-        <div className="socialMenu"><a href="#">◎ Instagram</a><a href="#">♪ Tiktok</a><a href="#">ⓟ Pinterest</a></div>
+        <div className="socialMenu">
+          <a href="https://instagram.com" target="_blank" rel="noreferrer">◎ Instagram</a>
+          <a href="https://tiktok.com" target="_blank" rel="noreferrer">♪ Tiktok</a>
+          <a href="https://pinterest.com" target="_blank" rel="noreferrer">ⓟ Pinterest</a>
+        </div>
       </aside>
 
       <section className="hero" id="top">
@@ -159,17 +221,29 @@ export default function Home() {
           <p>Limited skateboard decks created with independent artists.<br className="desktopBreak" /> Canadian maple, screen-ready color and numbered editions.<br className="desktopBreak" /> Hang it on the wall—or take it to the street.</p>
           <a href="#selection">SHOP THE DROP</a>
         </div>
-        <div className="heroArrows"><button onClick={heroFlash} aria-label="Précédent">←</button><button onClick={heroFlash} aria-label="Suivant">→</button></div>
+        <div className="heroArrows">
+          <button onClick={() => step(-1)} aria-label="Previous deck">←</button>
+          <button onClick={() => step(1)} aria-label="Next deck">→</button>
+        </div>
       </section>
 
       <section className="selection" id="selection">
-        <div className="sectionTitle"><h2>The raccoon&apos;s latest drop</h2><a href="#selection">View all decks</a></div>
-        <div className="posterRail" onMouseLeave={() => setActive(11)}>
-          {products.map(([name, slug, artist], index) => (
-            <a key={slug} href={`#${slug}`} className={`posterItem ${active === index ? "active" : ""}`} onMouseEnter={() => setActive(index)} onFocus={() => setActive(index)}>
-              <div className="deckShape"><img src={deckAssets[index]} alt={`${name} skateboard deck by ${artist}`} /></div>
-              <div className="posterMeta"><span>{name}</span><small>{artist} · €89.00</small></div>
-            </a>
+        <div className="sectionTitle"><h2>The raccoon&apos;s latest drop</h2><a href="#footer">View all decks</a></div>
+        <div className="posterRail" ref={railRef}>
+          {PRODUCTS.map((product, index) => (
+            <article
+              key={product.slug}
+              id={product.slug}
+              className={`posterItem ${active === index ? "active" : ""}`}
+              onMouseEnter={() => setActive(index)}
+            >
+              <div className="deckShape"><img src={product.image} alt={`${product.name} skateboard deck by ${product.artist}`} /></div>
+              <div className="posterMeta">
+                <span>{product.name}</span>
+                <small>{product.artist} · {formatPrice(product.price)}</small>
+                <button className="addButton" onClick={() => addProduct(product)}>ADD TO BAG</button>
+              </div>
+            </article>
           ))}
         </div>
       </section>
@@ -180,7 +254,14 @@ export default function Home() {
           <div className="burst b1">✦</div><div className="burst b2">✦</div>
           <img src="/assets/raccoon.png" alt="" />
         </a>
-        <a className="featureCard catalogueCard" href="#selection"><div className="featuredDeck"><img src="/assets/poster-5.png" alt="After School limited skateboard deck" /></div><div className="dropCopy"><small>DROP 04 / 100 MADE</small><strong>AFTER SCHOOL</strong><span>BY NINA VALE →</span></div></a>
+        <button className="featureCard catalogueCard" onClick={() => addProduct(featured)}>
+          <div className="featuredDeck"><img src={featured.image} alt={`${featured.name} limited skateboard deck`} /></div>
+          <div className="dropCopy">
+            <small>DROP 04 / 100 MADE</small>
+            <strong>{featured.name.toUpperCase()}</strong>
+            <span>BY {featured.artist.toUpperCase()} →</span>
+          </div>
+        </button>
       </section>
 
       <footer id="footer">
@@ -188,19 +269,80 @@ export default function Home() {
           <p>7-ply Canadian maple<br />Numbered artist editions<br />Pressed and printed in Europe<br />Deck only — 8.25&quot; standard width<br />Secure worldwide shipping</p>
         </div>
         <img className="footerMascot" src="/assets/raccoon.png" alt="" />
-        <div className="footerLinks"><p><b>Studio</b><br />studio@plyform.co</p><div><a href="#">Instagram</a><a href="#">Tiktok</a><a href="#">Pinterest</a><a href="#">Shipping</a><a href="#">Returns</a><a href="#">Terms</a></div><a href="#">2026 PLY/FORM — RIDE THE ART</a></div>
+        <div className="footerLinks">
+          <p><b>Studio</b><br />studio@plyform.co</p>
+          <div>
+            <a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram</a>
+            <a href="https://tiktok.com" target="_blank" rel="noreferrer">Tiktok</a>
+            <a href="https://pinterest.com" target="_blank" rel="noreferrer">Pinterest</a>
+            <a href="#selection">Shipping</a>
+            <a href="#selection">Returns</a>
+            <a href="#selection">Terms</a>
+          </div>
+          <a href="#top">2026 PLY/FORM — RIDE THE ART</a>
+        </div>
       </footer>
 
-      <div className={`modalBackdrop ${search ? "open" : ""}`} onClick={() => setSearch(false)} aria-hidden={!search}>
-        <div className="searchBox" onClick={(e) => e.stopPropagation()}><SearchIcon /><input ref={searchInputRef} placeholder="Search decks or artists..." aria-label="Search decks or artists" /></div>
+      <div className={`modalBackdrop ${search ? "open" : ""}`} onClick={closeSearch} aria-hidden={!search}>
+        <div className="searchPanel" onClick={(e) => e.stopPropagation()}>
+          <div className="searchBox">
+            <SearchIcon />
+            <input
+              ref={searchInputRef}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search decks or artists..."
+              aria-label="Search decks or artists"
+            />
+          </div>
+          {query.trim() && (
+            <div className="searchResults">
+              {results.length === 0 && <p className="searchEmpty">No decks match “{query.trim()}”</p>}
+              {results.map((product) => (
+                <button key={product.slug} className="searchResult" onClick={() => { addProduct(product); closeSearch(); }}>
+                  <img src={product.image} alt="" />
+                  <span><b>{product.name}</b><small>{product.artist}</small></span>
+                  <em>{formatPrice(product.price)}</em>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className={`drawerBackdrop ${cart ? "open" : ""}`} onClick={() => setCart(false)} />
       <aside className={`cartDrawer ${cart ? "open" : ""}`} aria-hidden={!cart}>
         <div className="cartTop"><h2>Your bag</h2><button onClick={() => setCart(false)} aria-label="Close">×</button></div>
-        <p className="emptyCart">No decks in your bag yet</p>
-        <div className="cartBottom"><div><span>Shipping</span><span>Free over €80</span></div><div className="total"><b>Total</b><b>€0</b></div><button disabled>Checkout</button></div>
+        {bag.lines.length === 0 ? (
+          <p className="emptyCart">{ordered ? "Order placed — thanks for riding the art" : "No decks in your bag yet"}</p>
+        ) : (
+          <div className="cartLines">
+            {bag.lines.map((line) => (
+              <div className="cartLine" key={line.slug}>
+                <img src={line.image} alt="" />
+                <div className="cartLineInfo">
+                  <b>{line.name}</b>
+                  <small>{line.artist}</small>
+                  <div className="qtyControls">
+                    <button onClick={() => bag.setQty(line.slug, line.qty - 1)} aria-label={`Decrease ${line.name}`}>−</button>
+                    <span>{line.qty}</span>
+                    <button onClick={() => bag.setQty(line.slug, line.qty + 1)} aria-label={`Increase ${line.name}`}>+</button>
+                    <button className="removeLine" onClick={() => bag.remove(line.slug)}>Remove</button>
+                  </div>
+                </div>
+                <em>{formatPrice(line.price * line.qty)}</em>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="cartBottom">
+          <div><span>Shipping</span><span>{bag.shipping === 0 ? "Free over €80" : formatPrice(bag.shipping)}</span></div>
+          <div className="total"><b>Total</b><b>{formatPrice(bag.total)}</b></div>
+          <button disabled={bag.count === 0} onClick={checkout}>Checkout</button>
+        </div>
       </aside>
+
+      <div className={`toast ${toast ? "show" : ""}`} role="status" aria-live="polite">{toast}</div>
     </main>
   );
 }
